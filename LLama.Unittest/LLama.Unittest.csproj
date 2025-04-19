@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\LLama\LLamaSharp.Runtime.targets" />
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>LLama.Unittest</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>AnyCPU;x64</Platforms>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="DownloadContentFilesInner">
+  
+    <DownloadFile SourceUrl="https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_0.gguf" DestinationFolder="Models" DestinationFileName="Llama-3.2-1B-Instruct-Q4_0.gguf" SkipUnchangedFiles="true">
+	</DownloadFile>
+
+    <DownloadFile SourceUrl="https://huggingface.co/HuggingFaceTB/smollm-360M-instruct-v0.2-Q8_0-GGUF/resolve/main/smollm-360m-instruct-add-basics-q8_0.gguf" DestinationFolder="Models" DestinationFileName="smollm-360m-instruct-add-basics-q8_0.gguf" SkipUnchangedFiles="true">
+    </DownloadFile>
+    
+	<DownloadFile SourceUrl="https://huggingface.co/cjpais/llava-1.6-mistral-7b-gguf/resolve/main/llava-v1.6-mistral-7b.Q3_K_XS.gguf" DestinationFolder="Models" DestinationFileName="llava-v1.6-mistral-7b.Q3_K_XS.gguf" SkipUnchangedFiles="true">
+	</DownloadFile>
+    
+	<DownloadFile SourceUrl="https://huggingface.co/cjpais/llava-1.6-mistral-7b-gguf/resolve/main/mmproj-model-f16.gguf" DestinationFolder="Models" DestinationFileName="mmproj-model-f16.gguf" SkipUnchangedFiles="true">
+	</DownloadFile>
+    
+	<DownloadFile SourceUrl="https://huggingface.co/leliuga/all-MiniLM-L12-v2-GGUF/resolve/main/all-MiniLM-L12-v2.Q8_0.gguf" DestinationFolder="Models" DestinationFileName="all-MiniLM-L12-v2.Q8_0.gguf" SkipUnchangedFiles="true">
+	</DownloadFile>
+
+  </Target>
+  
+  <Target Name="DownloadContentFiles" BeforeTargets="DispatchToInnerBuilds;BeforeBuild">
+    <MSBuild Projects="$(MSBuildProjectFile)" Targets="DownloadContentFilesInner" Properties="TargetFramework=once" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LLama.KernelMemory\LLamaSharp.KernelMemory.csproj" />
+    <ProjectReference Include="..\LLama.SemanticKernel\LLamaSharp.SemanticKernel.csproj" />
+    <ProjectReference Include="..\LLama\LLamaSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Models\all-MiniLM-L12-v2.Q8_0.gguf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Llama-3.2-1B-Instruct-Q4_0.gguf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\smollm-360m-instruct-add-basics-q8_0.gguf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\llava-v1.6-mistral-7b.Q3_K_XS.gguf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\mmproj-model-f16.gguf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\extreme-ironing-taxi-610x427.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
