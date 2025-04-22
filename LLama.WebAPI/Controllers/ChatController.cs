@@ -26,7 +26,7 @@ namespace LLama.WebAPI.Controllers
         public async Task SendMessageStream([FromBody] SendMessageInput input, [FromServices] StatefulChatService _service, CancellationToken cancellationToken)
         {
             Response.ContentType = "text/event-stream";
-
+            
             await foreach (var r in _service.SendStream(input))
             {
                 await Response.WriteAsync("data:" + r + "\n\n", cancellationToken);

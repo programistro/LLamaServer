@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLama Web UI</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        #console {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            height: 200px;
+            overflow-y: scroll;
+        }
+        .status-connected {
+            color: green;
+        }
+        .status-disconnected {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+<h1>LLama Web UI</h1>
+
+<div>
+    <label for="modelName">Model Name:</label>
+    <input type="text" id="modelName" value="default-model">
+</div>
+
+<div>
+    <label for="prompt">Prompt:</label>
+    <input type="text" id="prompt" value="Hello, how are you?">
+</div>
+
+<button id="connectBtn">Connect</button>
+<button id="loadModelBtn">Load Model</button>
+<button id="sendPromptBtn">Send Prompt</button>
+
+<div>
+    Status: <span id="status" class="status-disconnected">Disconnected</span>
+</div>
+
+<div id="console">
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+    const consoleDiv = document.getElementById('console');
+    const connectBtn = document.getElementById('connectBtn');
+    const loadModelBtn = document.getElementById('loadModelBtn');
+    const sendPromptBtn = document.getElementById('sendPromptBtn');
+    const statusSpan = document.getElementById('status');
+    const modelNameInput = document.getElementById('modelName');
+    const promptInput = document.getElementById('prompt');
+
+    let connection = null;
+
+    connectBtn.addEventListener('click', connect);
+    loadModelBtn.addEventListener('click', loadModel);
+    sendPromptBtn.addEventListener('click', sendPrompt);
+
+    async function connect() {
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl("/SessionConnectionHub")
+            .build();
+
+        connection.on("OnStatus", (connectionId, status) => {
+            logMessage(`Status: ${status}`);
+            statusSpan.textContent = status;
+            statusSpan.className = status === 'Connected' ? 'status-connected' : 'status-disconnected';
+        });
+
+        connection.on("OnError", (error) => {
+            logMessage(`Error: ${error}`);
+        });
+
+        connection.onclose(async () => {
+            logMessage("Connection closed");
+            statusSpan.textContent = 'Disconnected';
+            statusSpan.className = 'status-disconnected';
+            setTimeout(() => connect(), 5000);
+        });
+
+        try {
+            await connection.start();
+            logMessage("Connected.");
+        } catch (err) {
+            logMessage(`Error while starting connection: ${err}`);
+            statusSpan.textContent = 'Disconnected';
+            statusSpan.className = 'status-disconnected';
+            setTimeout(() => connect(), 5000);
+        }
+    }
+
+    async function loadModel() {
+        if (!connection) {
+            logMessage("Not connected.");
+            return;
+        }
+
+        const sessionConfig = {
+            Model: modelNameInput.value
+        };
+
+        const inferenceConfig = {
+            Temperature: 0.7,
+            TopP: 0.9
+        };
+
+        try {
+            await connection.invoke("LoadModel", sessionConfig, inferenceConfig);
+            logMessage("Model loaded.");
+        } catch (err) {
+            logMessage(`Error loading model: ${err}`);
+        }
+    }
+
+    async function sendPrompt() {
+        if (!connection) {
+            logMessage("Not connected.");
+            return;
+        }
+
+        const prompt = promptInput.value;
+        const inferenceConfig = {
+            Temperature: 0.7,
+            TopP: 0.9
+        };
+
+        try {
+            const stream = await connection.stream("SendPrompt", prompt, inferenceConfig);
+
+            stream.subscribe({
+                next: (item) => {
+                    logMessage(`Response: ${item.content}`);
+                },
+                complete: () => {
+                    logMessage("Prompt completed.");
+                },
+                error: (err) => {
+                    logMessage(`Error sending prompt: ${err}`);
+                },
+            });
+        } catch (err) {
+            logMessage(`Error sending prompt: ${err}`);
+        }
+    }
+
+    function logMessage(message) {
+        const newMessage = document.createElement('div');
+        newMessage.textContent = message;
+        consoleDiv.appendChild(newMessage);
+        consoleDiv.scrollTop = consoleDiv.scrollHeight; // Scroll to bottom
+    }
+
+    // Automatically try to connect on page load
+    connect();
+</script>
+</body>
+</html>

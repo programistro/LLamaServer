@@ -1,3 +1,4 @@
+using LLama.WebApi.Hubs;
 using LLama.WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,11 +9,12 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<StatefulChatService>();
 builder.Services.AddScoped<StatelessChatService>();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<LlamaService>();
 
 var app = builder.Build();
 app.UseRouting();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -21,7 +23,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
+// app.MapStaticAssets();
+app.UseStaticFiles();
+app.MapHub<AiHub>("/aiHub");
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
