@@ -10,7 +10,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<StatefulChatService>();
 builder.Services.AddScoped<StatelessChatService>();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<ISessionRepository, MemorySessionRepository>();
 builder.Services.AddSingleton<LlamaService>();
+
 
 var app = builder.Build();
 app.UseRouting();
